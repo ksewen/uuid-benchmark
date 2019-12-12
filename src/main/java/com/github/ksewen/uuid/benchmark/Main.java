@@ -20,11 +20,11 @@ public class Main {
 
     public static void main(String[] args) throws RunnerException {
         Scanner sc = new Scanner(System.in);
-        System.out.println("please input the benchmark type UUID/KUID：");
+        System.out.println("please input the benchmark type UUID/KUID: ");
         String type = sc.nextLine();
-        System.out.println("please input the output file：");
+        System.out.println("please input the output file: ");
         String output = sc.nextLine();
-        System.out.println("please input the thread count：");
+        System.out.println("please input the thread count: ");
         int threads = sc.nextInt();
 
         if (StringUtils.isBlank(type)) {
