@@ -42,6 +42,11 @@ public class KUIDBenchmark {
   }
 
   @Benchmark
+  public void KUIDRandomKUID(Blackhole bh) {
+    bh.consume(KUID.randomKUID(ThreadLocalRandom.current()));
+  }
+
+  @Benchmark
   public void jugWithCustomerRandom(Blackhole bh) {
     bh.consume(customerRandomBaseGenerator.generate(ThreadLocalRandom.current()));
   }

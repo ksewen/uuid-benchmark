@@ -15,7 +15,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
  */
 public class Main {
 
-  private static final String DEFAULT_LOG_FILE = "/root/benchmark/benchmark-{0}-thread-{1}.log";
+  private static final String DEFAULT_LOG_FILE = "benchmark-{0}-thread-{1}.log";
 
   public static void main(String[] args) throws RunnerException {
     Scanner sc = new Scanner(System.in);
