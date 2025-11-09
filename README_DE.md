@@ -6,39 +6,39 @@ UUID wird in vielen Systemen ganz selbstverständlich verwendet – als **Reques
 Datenbanken** oder als **Identifier in verteilten Services**.
 
 Dabei wird jedoch oft übersehen, dass **die Art der Erzeugung von UUIDs** unter hoher Parallelität **einen direkten
-Einfluss** auf die Systemleistung hat. Insbesondere wenn UUIDs über Standard-Implementierungen erzeugt werden, kann dies
-zu **unerwarteten Blockaden** und **messbaren Latenzen** führen.
+Einfluss** auf die Systemleistung hat. Insbesondere die Standardimplementierung kann unter Last zu **unerwarteten
+Blockierungen** und **zusätzlicher Latenz** führen.
 
-> Dieses Benchmark-Projekt zeigt, wie ein scheinbar harmloser Mechanismus unter Last zum Performance-Bottleneck wird –
-> und wie sich das Problem systematisch analysieren und beheben lässt.
+> Dieses Benchmark-Projekt zeigt, wie ein vermeintlich unkritischer Mechanismus unter hoher Last zu einem
+> Performance-Engpass werden kann – und wie sich dieser systematisch analysieren und nachvollziehbar beheben lässt.
 
 Zusätzlich existieren verschiedene leistungsoptimierte UUID-Implementierungen auf dem Markt. Um jedoch keine
 zusätzlichen Bibliotheksabhängigkeiten einzuführen, habe ich eine eigene Variante umgesetzt und **KUID** genannt. Im
 Folgenden wird dieser Begriff ohne weitere Erläuterung verwendet.
 
 🔍 **Keine Zeit für Details?**  
-[Hier geht’s direkt zu den Ergebnissen.](#ergebnisse)
+[Direkt zu den Ergebnissen.](#ergebnisse)
 
 🔧 **Projekt selbst ausführen?**  
-[Hier geht’s direkt zur Ausführung.](#ausführung)
+[Zur Ausführung.](#ausführung)
 
 ## Hintergrund
 
-**Spring Cloud Gateway** gilt grundsätzlich als eine **leistungsfähige Lösung** für das Routing und die Verwaltung von
-API-Anfragen. In einem meiner Projekte erhielt ich jedoch Kundenrückmeldungen, dass ein auf Spring Cloud Gateway
-basierendes Gateway unter Last nur **einige hundert Requests pro Sekunde** verarbeiten konnte.
+**Spring Cloud Gateway** gilt grundsätzlich als eine **leistungsstarke Lösung** zur Weiterleitung und Verwaltung von
+API-Anfragen. In einem meiner Projekte erhielt ich jedoch Rückmeldungen aus der Nutzung, dass ein darauf basierendes
+Gateway unter Last lediglich **einige hundert Requests pro Sekunde** verarbeiten konnte.
 
 Während der Performance-Analyse stellte sich heraus, dass die Standard-Implementierung zur **UUID-Generierung** in
-bestimmten Szenarien einen unerwartet hohen Einfluss auf die Gesamtdurchsatzrate haben kann (in meinem Fall ca. **10%**
-Performance-Einbußen).
+bestimmten Szenarien einen unerwartet hohen Einfluss auf die Gesamtdurchsatzrate haben kann (in meinem Fall betrug der
+Verlust etwa **10%**.).
 
 > *Wichtig:*  
-> Dieses Repository ist eine bewusst minimal gehaltene und vollständig von internen oder vertraulichen Informationen
-> bereinigte Reproduktion des Befunds. Ziel ist es, die Ursache klar isoliert und nachvollziehbar darzustellen.
+> Dieses Repository bildet den technischen Befund in stark reduzierter Form nach. Sämtliche internen oder sensiblen
+> Inhalte wurden vollständig entfernt. Das Ziel ist eine klar isolierte und allgemein nachvollziehbare Darstellung.
 
-Der vollständige Lösungsweg des ursprünglichen Problems sowie die Optimierungsmaßnahmen werden in meinem separaten
-Projekt **[performance-test-example](https://github.com/ksewen/performance-test-example)** erläutert. Auch dort wurden *
-*sämtliche sensiblen Inhalte entfernt** oder **neutralisiert**.
+Der vollständige Lösungsansatz sowie die Optimierungsmaßnahmen werden in einem separaten Projekt erläutert:
+**[performance-test-example](https://github.com/ksewen/performance-test-example)** erläutert. Auch dort wurden
+**sämtliche sensiblen Inhalte entfernt** oder **neutralisiert**.
 
 ## Ausführung
 
@@ -129,22 +129,21 @@ Die folgende Messung stellt die Resultate eines Lasttests als Beispiel dar.
 Sie zeigt deutlich, dass unterschiedliche Strategien zur UUID-Erzeugung um Größenordnungen im Durchsatz variieren
 können.
 
-
-
 > *Wichtig:*  
-> Die im folgenden Benchmark gemessenen Unterschiede sind isolierte Benchmark-Ergebnisse. Sie fallen deutlich
-> höher aus als in einer realen Gateway-Produktivumgebung. Der Benchmark dient dazu, den Effekt klar sichtbar zu machen.
+> Die hier dargestellten Werte stammen aus einem isolierten Micro-Benchmark. Sie fallen deutlich
+> höher aus als in einer realen Produktionsumgebung. Ziel des Benchmarks ist es, den Effekt klar und reproduzierbar
+> sichtbar zu machen.
 
-Die nachfolgende Messung zeigt zwei Implementierungen im direkten Vergleich.  
-Während `UUID.randomUUID()` unter Java 8 durch die synchronisierte `SecureRandom`-Instanz limitiert ist, nutzt **KUID**
-eine vorkonfigurierte, nicht-blockierende Random-Quelle.
+Die nachfolgende Messung zeigt zwei Implementierungen im direkten Vergleich. `UUID.randomUUID()` ist unter Java 8 durch
+die synchronisierte `SecureRandom`-Instanz limitiert, während **KUID** eine
+vorkonfigurierte, nicht blockierende Zufallsquelle verwendet.
 
 ![UUID vs KUID Benchmark](https://raw.githubusercontent.com/ksewen/Bilder/main/20251109184252140.png)
 
 |               Methode               |     Durchsatz     |      Differenz      |
 |:-----------------------------------:|:-----------------:|:-------------------:|
-|  `UUID` (Standard-Implementierung)  |  2 184 584 ops/s  |      Referenz       |
-| `KUID` (Optimierte Implementierung) | 223 345 730 ops/s | **~102x schneller** |
+|  `UUID` (Standard-Implementierung)  |  2.184.584 ops/s  |      Referenz       |
+| `KUID` (Optimierte Implementierung) | 223.345.730 ops/s | **~102x schneller** |
 
 > *Kernaussage:*   
 > Was im Code wie ein *kleines Detail* aussieht, kann unter realer Last den **Durchsatz um zwei Größenordnungen**
@@ -152,31 +151,30 @@ eine vorkonfigurierte, nicht-blockierende Random-Quelle.
 
 ### Testumgebung
 
-Diese Ergebnisse stammen aus einem einmaligen reproduzierbaren Benchmark-Lauf unter **folgenden Bedingungen**:
+Die unten aufgeführten Werte stammen aus einem reproduzierbaren Benchmark-Lauf unter **folgenden Rahmenbedingungen**:
 
-|           Komponente           |                Wert                 |
-|:------------------------------:|:-----------------------------------:|
-|             Gerät              | MacBook Pro (2021) mit Apple M1 Pro |
-|        Arbeitsspeicher         |                32 GB                |
-|         Ausführung-Typ         |               Docker                |
-| CPU-Limit vom Docker-Container |               4 Kerne               |
-| RAM-Limit vom Docker-Container |                8 GB                 |
-|          Java-Version          |          OpenJDK 1.8.0_121          |
-|            Threads             |        16 parallele Threads         |
+|      Komponente       |                Wert                 |
+|:---------------------:|:-----------------------------------:|
+|         Gerät         | MacBook Pro (2021) mit Apple M1 Pro |
+|    Arbeitsspeicher    |                32 GB                |
+|  Ausführungsumgebung  |               Docker                |
+| CPU-Limit (Container) |               4 Kerne               |
+| RAM-Limit (Container) |                8 GB                 |
+|     Java-Version      |          OpenJDK 1.8.0_121          |
+|     Parallelität      |        16 parallele Threads         |
 
 > *Hinweis:*  
 > Die Ergebnisse stark von der jeweiligen Testumgebung (Hardware, Betriebssystem, JVM-Konfiguration, Testparameters
-> usw.)
-> abhängen und daher bei anderen Systemen deutlich abweichen können.  
+> usw.) abhängen.  
 > Der Abschnitt [Ausführung](#ausfuehrung) lässt sich nutzen, um das Projekt selbst aufzusetzen und eigene Ergebnisse zu
 > erhalten.
 
 ## Interpretation
 
-Die Analyse ergab, dass die Performance-Einbußen hauptsächlich durch die Verwendung von `java.util.UUID.randomUUID()`
-verursacht wurden. Unter Java 8 greift dieser Mechanismus intern auf `SecureRandom` zurück, welches **synchronisiert**
-ist. In hochgradig parallelisierten Umgebungen — wie sie bei API-Gateways üblich sind — führt dies zu *
-*Thread-Blockierungen** und messbaren Verzögerungen.
+Die Analyse zeigte, dass die beobachteten Performance-Verluste vor allem durch die Verwendung von
+`java.util.UUID.randomUUID()` verursacht wurden. Unter Java 8 nutzt diese Methode intern eine synchronisierte
+`SecureRandom`-Instanz. In stark parallelisierten Systemen – wie beispielsweise in API-Gateways – führt dies zu
+**Thread-Blockierungen** und messbaren Verzögerungen.
 
 > Auch mit dem Parameter `-Djava.security.egd=file:/dev/urandom` zeigte sich in meiner Umgebung weiterhin ein klarer
 > Blockierungseffekt.
@@ -191,39 +189,41 @@ Während des Benchmarks mit **UUID** tritt nach einer gewissen Laufzeit vermehrt
 
 > *WARNING:* Timestamp over-run: need to reinitialize random sequence auf.
 
-Dieser Effekt könnte indirekt darauf hinweisen, dass die zugrunde liegende SecureRandom-Initialisierung zu Verzögerungen
-bzw. Blockierungen führt.
+Diese Warnung deutet darauf hin, dass die zugrunde liegende Initialisierung von `SecureRandom` unter Last erschöpft wird
+und sich dadurch weitere Verzögerungen ergeben können.
 
-**Verwendetes Werkzeug zur Identifikation:**  
-Ich habe das Verhalten mit **JProfiler** untersucht und konnte dort die Blockierungsstellen eindeutig erkennen.
+**Zur Identifikation des Engpasses verwendetes Werkzeug:**  
+Die Analyse wurde mit **JProfiler** durchgeführt. Dabei konnten die Blockierungen eindeutig sichtbar gemacht werden.
+
 > *Blockierte Threads*  
 > ![Thread-Blockierung](https://raw.githubusercontent.com/ksewen/Bilder/main/202308201439720.png)
-> Die JProfiler-Aufnahme zeigt, dass mehrere Threads gleichzeitig auf denselben java.lang.Object-Monitor warten.   
+> Die Aufnahme zeigt, dass mehrere Threads gleichzeitig auf denselben `java.lang.Object`-Monitor warten.    
 > Dies bestätigt die durch Synchronisation verursachte Blockierung.
 
 > *Stacktrace*
 > ![Call-Duration](https://raw.githubusercontent.com/ksewen/Bilder/main/202308201439000.png)
-> Innerhalb derselben Blockierung zeigt der Stacktrace, dass SecureRandom einen signifikanten Teil der Ausführungszeit
-> beansprucht.
-> Damit wird sichtbar, dass die UUID-Erzeugung selbst den Engpass verursacht.
+> Innerhalb derselben Blockierung zeigt der Stacktrace, dass `SecureRandom` während der Blockierung einen erheblichen
+> Teil der Ausführungszeit.  
+> Damit wird klar erkennbar, dass die UUID-Erzeugung selbst den Engpass verursacht.
 
 
 Diese Erkenntnis zeigt, dass selbst ein scheinbar kleiner und oft übersehener Funktionsaufruf - **die UUID-Erzeugung** -
-in Lastsituationen zu einem **nicht-trivialen System-Bottleneck** werden kann.
+in Lastsituationen zu einem **relevanten Performance-Bottleneck** werden kann.
 
 ## Fazit
 
 Dieser Benchmark macht deutlich, dass selbst weit verbreitete und vermeintlich neutrale Standardmechanismen
 wie `UUID.randomUUID()` unter hoher Parallelität spürbare Auswirkungen auf die Systemleistung haben können.
 
-Die Analyse im Produktionskontext sowie die reproduzierbare Demonstration in diesem Projekt zeigen vor allem zwei
-Kernpunkte:
+Die Analyse im realen Produktionsumfeld sowie die reproduzierbare Darstellung in diesem Projekt verdeutlichen vor allem
+zwei Kernpunkte:
 
 1. **Performance-Probleme entstehen oft an unerwarteten Stellen.** Ein kleines Detail in der Implementierung kann sich
-   unter Last zu einem messbaren Bottleneck entwickeln.
+   unter Last zu einem messbaren Engpass entwickeln.
 
-2. **Gezielte Messung und Isolierung des Problems sind entscheidend.** Nur durch systematische Reproduktion, Beobachtung
-   und Vergleich lässt sich eine fundierte Optimierungsentscheidung treffen.
+2. **Gezielte Messung und klare Trennung des Problems sind entscheidend.**  
+   Nur durch reproduzierbare Tests, systematische Beobachtung und strukturierten Vergleich lassen sich verlässliche und
+   fundierte Optimierungsentscheidungen treffen.
 
-Insgesamt unterstreicht dieses Projekt die Bedeutung von **Ursachenanalyse**, **Messbarkeit** und **bewusst gewählten
-Implementierungsdetails** – besonders in Systemen, die hohen Durchsatz oder geringe Latenz erfordern.
+Insgesamt unterstreicht dieses Projekt die Bedeutung von **Ursachenanalyse**, **Messbarkeit** und **bewusste Entscheidungen
+bei Implementierungsdetails** – besonders in Systemen, die hohen Durchsatz oder geringe Latenz erfordern.

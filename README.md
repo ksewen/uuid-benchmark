@@ -1,19 +1,19 @@
-# Benchmark: UUID under Load – How a Small Detail Became a System Bottleneck ⚡️🧩
+# Benchmark: UUID Under Load – How a Small Detail Became a System Bottleneck ⚡️🧩
 
 [Deutsch](./README_DE.md) | [简体中文](./README_ZH.md)
 
-UUIDs are commonly used in many systems – as **request trace IDs**, **primary keys in databases**, or **identifiers in
-distributed services**.
+UUID is commonly used in many systems – as a **request trace ID**, as a **primary key in databases**, or as an *
+*identifier in distributed services**.
 
-However, it is often overlooked that **the method used to generate UUIDs** can have a **direct impact on system
-performance** under high parallelism. When UUIDs are generated through standard implementations, this may lead to *
-*unexpected blocking** and **measurable latency**.
+However, it is often overlooked that **the way UUIDs are generated** can have a **direct effect on performance under
+high parallel load**. When UUIDs are generated using the standard implementation, this can lead to **unexpected blocking
+** and **measurable latency**.
 
-> This benchmark project demonstrates how a seemingly harmless mechanism can become a performance bottleneck under
-> load – and how the issue can be systematically analyzed and resolved.
+> This benchmark project shows how a small and harmless-looking mechanism can turn into a performance bottleneck under
+> load – and how the problem can be analyzed and solved step by step.
 
-Additionally, various high-performance UUID implementations exist. To avoid introducing additional library dependencies,
-I implemented my own optimized version, called **KUID**. This term is used below without further elaboration.
+There are different high‑performance UUID implementations available. To keep this project simple and without extra
+dependencies, I created my own version called **KUID**. The name will be used directly throughout the document.
 
 🔍 **No time for details?**  
 [Jump directly to the results.](#results)
@@ -23,38 +23,37 @@ I implemented my own optimized version, called **KUID**. This term is used below
 
 ## Background
 
-**Spring Cloud Gateway** is generally considered a **high-performance solution** for routing and managing API requests.
-However, in one of my projects, customers reported that a gateway based on Spring Cloud Gateway could handle only **a
+**Spring Cloud Gateway** is usually considered a **high‑performance solution** for routing and managing API requests.
+However, in one of my projects, a customer reported that a gateway based on Spring Cloud Gateway could only process **a
 few hundred requests per second** under load.
 
-During the performance analysis, it became evident that the standard implementation of **UUID generation** could have an
-unexpectedly strong impact on throughput in certain scenarios (in my case, around **10% performance loss**).
+During the performance analysis, I found that the **standard UUID generation** had an unexpected effect on system
+throughput (in my case around **10% performance loss**).
 
 > *Important:*  
-> This repository is a deliberately minimized and fully sanitized reproduction of the finding. The goal is to clearly
-> isolate and demonstrate the root cause.
+> This repository is a minimal and clean reproduction of the issue. All internal or confidential information has been
+> removed.
 
-The full resolution of the original issue and the corresponding optimization steps are described in my separate
-project:  
-**https://github.com/ksewen/performance-test-example**  
+The full analysis and optimization can be found in my other project: *
+*[performance-test-example](https://github.com/ksewen/performance-test-example)**.  
 All sensitive information has also been removed there.
 
 ## Execution
 
-### Local Execution
+### Run Locally
 
 #### Requirements:
 
 - **Java 8** or higher
 - **Maven 3.6.0** or higher
 
-#### Clone the repository
+#### Clone the repository:
 
 ```bash
 git clone git@github.com:ksewen/uuid-benchmark.git
 ```
 
-#### Build the project
+#### Build the project:
 
 ```bash
 mvn clean package
@@ -66,20 +65,20 @@ The executable JAR will be located at:
 ./target/uuid-benchmark.jar
 ```
 
-#### Start the benchmark
+#### Start
 
 ```bash
 java -jar ./target/uuid-benchmark.jar
 ```
 
-During execution, the following inputs will be requested:
+Example input:
 
 ```bash
 please input the benchmark type UUID/KUID: 
 # Supported values: UUID or KUID
 UUID
 
-# Press Enter for default file: benchmark-{type}-thread-{thread-counts}.log
+# Press Enter or use the default: benchmark-{type}-thread-{thread-counts}.log
 please input the output file: 
 /root/benchmark/benchmark-UUID-thread-8.log
 
@@ -88,7 +87,7 @@ please input the thread count:
 8
 ```
 
-### Running via Docker
+### Run with Docker
 
 #### Build Docker image:
 
@@ -114,94 +113,97 @@ docker exec -it ${container-id} /bin/sh
 java -jar uuid-benchmark.jar
 ```
 
-Necessary runtime inputs are described in the [Start](#start-the-benchmark) section.
+The required inputs are explained in the section [Start](#start).
 
 ## Results
 
-The following measurement represents an example benchmark run.  
-It shows that different UUID generation strategies can vary by **orders of magnitude** in throughput.
+The following measurement shows an example of a load test.  
+It shows clearly that different strategies for generating UUIDs can lead to **very different throughput levels**.
 
 > *Important:*  
-> The large differences shown here are **benchmark** results. In a real gateway system, the performance delta is
-> smaller; the benchmark isolates the effect for clarity.
+> The differences shown in this benchmark are micro-benchmark results. They are much higher than what would appear in a
+> real gateway production environment. This benchmark is used to make the performance effect easy to see.
 
-Comparison of two implementations:  
-While `UUID.randomUUID()` in Java 8 uses a **synchronized SecureRandom**, **KUID** uses a preconfigured **non-blocking**
+The next measurement compares two implementations directly.  
+While `UUID.randomUUID()` in Java 8 is limited by the synchronized `SecureRandom` instance, **KUID** uses a non-blocking
 random source.
 
 ![UUID vs KUID Benchmark](https://raw.githubusercontent.com/ksewen/Bilder/main/20251109184252140.png)
 
-|              Method               |    Throughput     | Relative Performance |
-|:---------------------------------:|:-----------------:|:--------------------:|
-| `UUID` (Standard Implementation)  |  2,184,584 ops/s  |      Reference       |
-| `KUID` (Optimized Implementation) | 223,345,730 ops/s |   **~102x faster**   |
+|              Method               |    Throughput     |    Difference    |
+|:---------------------------------:|:-----------------:|:----------------:|
+| `UUID` (standard implementation)  |  2,184,584 ops/s  |    Reference     |
+| `KUID` (optimized implementation) | 223,345,730 ops/s | **~102x faster** |
 
-> *Key insight:*  
-> What may appear to be a *small detail* can affect system throughput by **two orders of magnitude** under real load.
+> *Key Point:*  
+> A detail that looks *small* in code can have a **huge impact** under real load.
 
 ### Test Environment
 
-|       Component       |              Value               |
-|:---------------------:|:--------------------------------:|
-|        Device         | MacBook Pro (2021), Apple M1 Pro |
-|          RAM          |              32 GB               |
-|    Execution type     |         Docker container         |
-| CPU limit (container) |             4 cores              |
-| RAM limit (container) |               8 GB               |
-|     Java version      |        OpenJDK 1.8.0_121         |
-|        Threads        |       16 parallel threads        |
+These results come from a single reproducible benchmark run under the **following conditions**:
+
+|       Component        |              Value               |
+|:----------------------:|:--------------------------------:|
+|         Device         | MacBook Pro (2021), Apple M1 Pro |
+|         Memory         |              32 GB               |
+|    Execution Method    |              Docker              |
+| CPU Limit in Container |             4 Cores              |
+| RAM Limit in Container |               8 GB               |
+|      Java Version      |        OpenJDK 1.8.0_121         |
+|        Threads         |       16 parallel threads        |
 
 > *Note:*  
-> Performance results vary depending on system environment (hardware, OS, JVM configuration, test parameters etc.).  
-> Use the [Execution](#execution) section to run your own benchmark.
+> Results may change depending on hardware, system settings, JVM configuration, and benchmark parameters etc.  
+> You can set up the project yourself and run your own benchmark using the section [Execution](#execution).
 
 ## Interpretation
 
-The performance degradation was mainly caused by `java.util.UUID.randomUUID()`.  
-In Java 8, this implementation internally uses `SecureRandom`, which is **synchronized**. In highly parallel
-environments — such as API gateways — this leads to **thread blocking** and measurable throughput loss.
+The analysis showed that the performance loss was mainly caused by `java.util.UUID.randomUUID()`. In Java 8, this method
+uses `SecureRandom` internally, which is **synchronized**. In highly parallel environments — like API gateways — this
+causes **thread blocking** and performance delay.
 
-> Even with `-Djava.security.egd=file:/dev/urandom`, blocking remained clearly visible in my environment.
+> Even when using the parameter `-Djava.security.egd=file:/dev/urandom`, the blocking effect was still visible in my
+> environment.
 
-Observed during analysis:
+**Observed during analysis:**
 
-- Threads repeatedly entered a **Blocked** state
-- Blocking occurred during entropy generation within `SecureRandom`
-- The effect was **reproducible and measurable** (approx. 8–12% throughput loss in real workload)
+- Threads stayed often in the **Blocked** state
+- The blocking happened inside the entropy generation of `SecureRandom`
+- The effect was **reproducible and measurable**: about **8–12% throughput loss** in my case
 
-During UUID benchmarks, repeated warnings appeared:
+During the benchmark with **UUID**, after some time a lot of warning appeared:
 
 > *WARNING:* Timestamp over-run: need to reinitialize random sequence
 
-This suggests internal reset operations in the random source, indicating contention.
+This warning suggests that `SecureRandom` may cause delays or blocking in some conditions.
 
-### Profiling Evidence (JProfiler)
+**Tool used in the analysis:**  
 
-**Thread Blocking**
-![Thread Blocking](https://raw.githubusercontent.com/ksewen/Bilder/main/202308201439720.png)
+I used **JProfiler** to observe the behavior and could clearly see the blocking points.
 
-> Multiple threads wait on the same monitor object — confirming synchronization-related blocking.
+> **Blocked Threads**  
+> ![Thread-Blockierung](https://raw.githubusercontent.com/ksewen/Bilder/main/202308201439720.png)  
+> Multiple threads wait on the same java.lang.Object monitor.  
+> This confirms the blocking caused by synchronization.
 
-**Stacktrace**
-![Call Duration](https://raw.githubusercontent.com/ksewen/Bilder/main/202308201439000.png)
+> **Stacktrace**  
+> ![Call-Duration](https://raw.githubusercontent.com/ksewen/Bilder/main/202308201439000.png)  
+> Inside the same blocking, the stacktrace shows that `SecureRandom` takes a noticeable amount of execution time.  
+> This makes the UUID generation the actual bottleneck.
 
-> SecureRandom consumes significant execution time — identifying UUID generation as the bottleneck.
-
-These observations show how a **small and easily overlooked part of the system** — UUID generation — can become a *
-*non-trivial bottleneck** under high parallelism.
+This shows that a function that looks small and harmless — **UUID generation** — can become a **real system bottleneck**
+under load.
 
 ## Conclusion
 
-This benchmark demonstrates that even widely used mechanisms like `UUID.randomUUID()` can have **significant performance
-impact** under parallel load.
+This benchmark demonstrates that even widely used and common mechanisms like `UUID.randomUUID()` can have a strong
+effect on system performance under high concurrency.
 
-Key lessons:
+The production analysis and the benchmark in this project highlight two main points:
 
-1. **Performance issues often originate in unexpected places.**  
-   Small implementation details can scale into critical bottlenecks.
+1. **Performance problems often appear in places we do not expect.** A small detail can become a measurable bottleneck under load.
 
-2. **Systematic measurement and isolation are essential.**  
-   Only controlled benchmarking and profiling reveal the true cause.
+2. **Careful measurement and isolation of the problem are essential.** Only by reproducing, observing, and comparing, we can make a well-reasoned decision on optimization.
 
-This project highlights the importance of **root cause analysis**, **measurability**, and **intentional implementation
-choices** — especially in high-throughput or latency-sensitive systems.
+Overall, this project shows the importance of **root cause analysis**, **measurability**, and **careful implementation
+details** — especially in systems that require high throughput or low latency.
